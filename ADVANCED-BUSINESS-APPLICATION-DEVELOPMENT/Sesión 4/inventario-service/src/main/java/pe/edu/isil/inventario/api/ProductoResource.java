@@ -13,6 +13,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
 import pe.edu.isil.inventario.domain.ProductoInventario;
+import pe.edu.isil.inventario.dto.DevolucionStockRequest;
+import pe.edu.isil.inventario.dto.DevolucionStockResponse;
 import pe.edu.isil.inventario.dto.ProductoResponse;
 import pe.edu.isil.inventario.dto.ReservaStockRequest;
 import pe.edu.isil.inventario.dto.ReservaStockResponse;
@@ -83,6 +85,26 @@ public class ProductoResource {
         request.getCantidad()
     );
     return Response.ok(toReservaResponse(producto, request.getCantidad())).build();
+  }
+
+  @POST
+  @Path("/codigo/{codigo}/devoluciones")
+  public Response devolverPorCodigo(
+      @PathParam("codigo") String codigo,
+      @NotNull @Valid DevolucionStockRequest request
+  ) {
+    ProductoInventario producto = inventarioService.devolverStockPorCodigo(
+        codigo,
+        request.getCantidad()
+    );
+
+    DevolucionStockResponse respuesta = new DevolucionStockResponse(
+        producto.getCodigo(),
+        request.getCantidad(),
+        producto.getStock()
+    );
+
+    return Response.ok(respuesta).build();
   }
 
   private static ProductoResponse toResponse(ProductoInventario producto) {

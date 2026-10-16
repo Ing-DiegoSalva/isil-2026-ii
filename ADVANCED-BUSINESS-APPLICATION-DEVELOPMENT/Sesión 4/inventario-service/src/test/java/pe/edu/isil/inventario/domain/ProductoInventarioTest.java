@@ -35,4 +35,44 @@ class ProductoInventarioTest {
     assertThrows(IllegalStateException.class, () -> producto.reservarStock(2));
     assertEquals(1, producto.getStock());
   }
+
+  @Test
+  void debeDevolverStockCorrectamente() {
+    ProductoInventario producto = new ProductoInventario(
+        "LAP-001",
+        "Laptop",
+        new BigDecimal("2500.00"),
+        3
+    );
+
+    producto.devolverStock(2);
+
+    assertEquals(5, producto.getStock());
+  }
+
+  @Test
+  void noDebePermitirDevolverCantidadCero() {
+    ProductoInventario producto = new ProductoInventario(
+        "LAP-001",
+        "Laptop",
+        new BigDecimal("2500.00"),
+        3
+    );
+
+    assertThrows(IllegalArgumentException.class, () -> producto.devolverStock(0));
+    assertEquals(3, producto.getStock());
+  }
+
+  @Test
+  void noDebePermitirDevolverCantidadNegativa() {
+    ProductoInventario producto = new ProductoInventario(
+        "LAP-001",
+        "Laptop",
+        new BigDecimal("2500.00"),
+        3
+    );
+
+    assertThrows(IllegalArgumentException.class, () -> producto.devolverStock(-2));
+    assertEquals(3, producto.getStock());
+  }
 }

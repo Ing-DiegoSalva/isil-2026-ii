@@ -65,7 +65,9 @@ public class InventarioService {
         .getResultList();
 
     if (resultado.isEmpty()) {
-      throw productoNoEncontrado("No existe un producto de inventario con código " + codigo + ".");
+      throw productoNoEncontrado(
+          "No existe un producto de inventario con código " + codigo + "."
+      );
     }
     return resultado.getFirst();
   }
@@ -79,11 +81,38 @@ public class InventarioService {
   }
 
   /**
-   * Variante recomendada para integración entre sistemas: usa un código de negocio estable.
+   * Reserva stock utilizando el código de negocio del producto.
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public ProductoInventario reservarStockPorCodigo(String codigo, int cantidad) {
     return reservar(obtenerProductoPorCodigo(codigo), cantidad);
+  }
+
+  /**
+   * Devuelve stock por código dentro de una transacción local.
+   */
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
+  public ProductoInventario devolverStockPorCodigo(String codigo, int cantidad) {
+    if (cantidad <= 0) {
+      throw datosInvalidos("La cantidad debe ser mayor que cero.");
+    }
+
+    ProductoInventario producto = obtenerProductoPorCodigo(codigo);
+
+    try {
+      producto.devolverStock(cantidad);
+      entityManager.flush();
+      return producto;
+    } catch (IllegalArgumentException e) {
+      throw datosInvalidos(e.getMessage());
+    } catch (ArithmeticException e) {
+      throw datosInvalidos("La cantidad supera el límite permitido para el stock.");
+    } catch (OptimisticLockException e) {
+      throw new InventarioException(
+          InventarioException.Tipo.CONFLICTO_CONCURRENCIA,
+          "El stock fue modificado por otra operación. Vuelva a consultar e intente nuevamente."
+      );
+    }
   }
 
   private ProductoInventario reservar(ProductoInventario producto, int cantidad) {
@@ -93,8 +122,7 @@ public class InventarioService {
 
     try {
       producto.reservarStock(cantidad);
-      // Fuerza el UPDATE antes de abandonar el método para traducir aquí
-      // un eventual conflicto de optimistic locking.
+      // Fuerza el UPDATE para detectar conflictos de concurrencia.
       entityManager.flush();
       return producto;
     } catch (IllegalArgumentException e) {
@@ -117,6 +145,9 @@ public class InventarioService {
   }
 
   private static InventarioException productoNoEncontrado(String mensaje) {
-    return new InventarioException(InventarioException.Tipo.PRODUCTO_NO_ENCONTRADO, mensaje);
+    return new InventarioException(
+        InventarioException.Tipo.PRODUCTO_NO_ENCONTRADO,
+        mensaje
+    );
   }
 }
