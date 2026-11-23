@@ -4,6 +4,9 @@ import com.isil.edu.pe.spedidos.client.reportes.dto.PedidoReporteResponse;
 import com.isil.edu.pe.spedidos.client.reportes.dto.ProductoVendidoResponse;
 import com.isil.edu.pe.spedidos.client.reportes.dto.ResumenPedidosResponse;
 import java.util.List;
+import com.isil.edu.pe.spedidos.client.reportes.dto.EstadisticasRevisionResponse;
+import com.isil.edu.pe.spedidos.client.reportes.dto.PedidoRevisionReporteResponse;
+import com.isil.edu.pe.spedidos.client.reportes.dto.PedidoRevisionReporteResponse.EstadoRevision;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestClientException;
 
 @Component
 public class PedidoReporteRestClient implements PedidoReporteClient {
@@ -73,7 +77,43 @@ public class PedidoReporteRestClient implements PedidoReporteClient {
       throw noDisponible(e);
     }
   }
+    @Override
+    public List<PedidoRevisionReporteResponse> listarRevisiones(EstadoRevision estado) {
+        try {
+            var respuesta = restClient.get()
+                    .uri(baseUrl + "/revisiones?estado={estado}", estado.name())
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<List<PedidoRevisionReporteResponse>>() {});
 
+            if (respuesta == null) {
+                throw new PedidoReporteNoDisponibleException(
+                        "El servicio de reportes devolvió una respuesta vacía.", null);
+            }
+            return respuesta;
+        } catch (RestClientException e) {
+            throw noDisponible(e);
+        }
+    }
+
+    @Override
+    public EstadisticasRevisionResponse obtenerEstadisticasRevisiones() {
+        try {
+            var respuesta = restClient.get()
+                    .uri(baseUrl + "/estadisticas/revisiones")
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(EstadisticasRevisionResponse.class);
+
+            if (respuesta == null) {
+                throw new PedidoReporteNoDisponibleException(
+                        "El servicio de reportes devolvió una respuesta vacía.", null);
+            }
+            return respuesta;
+        } catch (RestClientException e) {
+            throw noDisponible(e);
+        }
+    }
   private PedidoReporteNoDisponibleException noDisponible(Exception e) {
     return new PedidoReporteNoDisponibleException(
         "pedidos-reportes-service no está disponible. Verifique que se ejecute en el puerto 8083.", e);

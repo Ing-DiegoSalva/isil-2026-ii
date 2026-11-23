@@ -8,3 +8,13 @@ CREATE TABLE pedido (
     total DECIMAL(12, 2) NOT NULL,
     fecha TIMESTAMP NOT NULL
 );
+ALTER TABLE pedido
+    ADD COLUMN revisado BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE TABLE pedido_revision (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    pedido_id BIGINT NOT NULL UNIQUE,
+    observacion TEXT NOT NULL,
+    fecha_revision TIMESTAMP NOT NULL,
+    FOREIGN KEY (pedido_id) REFERENCES pedido(id)
+);
