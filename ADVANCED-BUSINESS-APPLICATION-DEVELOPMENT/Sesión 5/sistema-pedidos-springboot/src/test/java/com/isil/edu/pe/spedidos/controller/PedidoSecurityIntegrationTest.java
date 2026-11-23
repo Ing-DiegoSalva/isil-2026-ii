@@ -5,8 +5,13 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+
+import com.isil.edu.pe.spedidos.client.inventario.InventarioClient;
+import java.util.List;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +39,9 @@ class PedidoSecurityIntegrationTest {
         .apply(springSecurity())
         .build();
   }
+
+    @MockitoBean
+    private InventarioClient inventarioClient;
 
   @Test
   @DisplayName("Redirect anonymous user to login when accessing orders page")
@@ -71,15 +79,13 @@ class PedidoSecurityIntegrationTest {
     response.andExpect(status().isForbidden());
   }
 
-  @Test
-  @DisplayName("Return order summary JSON when CONSULTA role accesses protected API")
-  void returnOrderSummaryJsonWhenConsultaRoleAccessesProtectedApi() throws Exception {
-    // Arrange / Act
-    ResultActions response = mockMvc.perform(get("/api/v1/orders/resumen")
-        .with(user("consulta").roles("CONSULTA")));
-    // Assert
-    response.andExpect(status().isOk())
-        .andExpect(jsonPath("$.totalPedidos").isNumber())
-        .andExpect(jsonPath("$.totalUnidades").isNumber());
-  }
+    @Test
+    @DisplayName("Allow CONSULTA to open the orders page")
+    void allowConsultaToOpenOrdersPage() throws Exception {
+        when(inventarioClient.listarProductos()).thenReturn(List.of());
+
+        mockMvc.perform(get("/pedidos").with(user("consulta").roles("CONSULTA")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("pedidos"));
+    }
 }

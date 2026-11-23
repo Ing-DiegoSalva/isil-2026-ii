@@ -1,11 +1,11 @@
-package com.isil.edu.pe.spedidos.repository;
+package com.isil.edu.pe.pedidos.reportes.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.isil.edu.pe.spedidos.entity.Pedido;
-import com.isil.edu.pe.spedidos.repository.projection.ProductoVendidoProjection;
-import com.isil.edu.pe.spedidos.repository.projection.ResumenPedidosProjection;
+import com.isil.edu.pe.pedidos.reportes.service.domain.Pedido;
+import com.isil.edu.pe.pedidos.reportes.repository.projection.ProductoVendidoProjection;
+import com.isil.edu.pe.pedidos.reportes.repository.projection.ResumenPedidosProjection;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,7 +73,7 @@ class PedidoReporteJdbcRepositoryTest {
 
     // Assert
     assertEquals(2, pedidos.size());
-    assertTrue(pedidos.stream().allMatch(pedido -> "Ana Torres".equals(pedido.getCliente())));
+    assertTrue(pedidos.stream().allMatch(pedido -> "Ana Torres".equals(pedido.cliente())));
   }
 
   @Test

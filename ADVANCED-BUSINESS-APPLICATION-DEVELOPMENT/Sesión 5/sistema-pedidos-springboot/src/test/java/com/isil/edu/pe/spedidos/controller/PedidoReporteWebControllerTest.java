@@ -6,6 +6,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.mockito.Mockito.when;
+import com.isil.edu.pe.spedidos.client.reportes.PedidoReporteClient;
+import com.isil.edu.pe.spedidos.client.reportes.dto.ResumenPedidosResponse;
+import java.math.BigDecimal;
+import java.util.List;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,10 +38,16 @@ class PedidoReporteWebControllerTest {
         .apply(springSecurity())
         .build();
   }
+    @MockitoBean
+    private PedidoReporteClient pedidoReporteClient;
 
   @Test
   @DisplayName("Render report view with expected model for CONSULTA user")
   void renderReportViewWithExpectedModelForConsultaUser() throws Exception {
+      when(pedidoReporteClient.listarProductosMasVendidos()).thenReturn(List.of());
+      when(pedidoReporteClient.buscarPorCliente("Ana")).thenReturn(List.of());
+      when(pedidoReporteClient.obtenerResumen())
+              .thenReturn(new ResumenPedidosResponse(0L, 0L, BigDecimal.ZERO, BigDecimal.ZERO));
     mockMvc.perform(get("/reportes/pedidos")
             .param("cliente", "Ana")
             .with(user("consulta").roles("CONSULTA")))
