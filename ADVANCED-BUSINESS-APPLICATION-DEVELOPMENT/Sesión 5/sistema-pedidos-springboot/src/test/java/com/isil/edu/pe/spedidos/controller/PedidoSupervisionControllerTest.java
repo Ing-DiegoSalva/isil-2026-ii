@@ -106,4 +106,46 @@ class PedidoSupervisionControllerTest {
 
         verifyNoInteractions(revisiones);
     }
+    @Test
+    void muestraUnMensajeCuandoElIdEsInvalido() throws Exception {
+        when(revisiones.revisar(0L, OBSERVACION))
+                .thenThrow(new IllegalArgumentException("El ID del pedido debe ser mayor que cero."));
+
+        mockMvc.perform(post(SUPERVISION + "/0/revisar")
+                        .with(user("operador").roles("OPERADOR"))
+                        .with(csrf())
+                        .param("observacion", OBSERVACION))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl(SUPERVISION))
+                .andExpect(flash().attribute("errorRevision",
+                        "El ID del pedido debe ser mayor que cero."));
+    }
+
+    @Test
+    void muestraUnMensajeCuandoLaObservacionEstaEnBlanco() throws Exception {
+        when(revisiones.revisar(1L, "   "))
+                .thenThrow(new IllegalArgumentException("La observación es obligatoria."));
+
+        mockMvc.perform(post(REVISAR)
+                        .with(user("operador").roles("OPERADOR"))
+                        .with(csrf())
+                        .param("observacion", "   "))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl(SUPERVISION))
+                .andExpect(flash().attribute("errorRevision", "La observación es obligatoria."));
+    }
+
+    @Test
+    void muestraUnMensajeCuandoElPedidoNoExiste() throws Exception {
+        when(revisiones.revisar(999999L, OBSERVACION))
+                .thenReturn(ResultadoRevision.PEDIDO_INEXISTENTE);
+
+        mockMvc.perform(post(SUPERVISION + "/999999/revisar")
+                        .with(user("operador").roles("OPERADOR"))
+                        .with(csrf())
+                        .param("observacion", OBSERVACION))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl(SUPERVISION))
+                .andExpect(flash().attribute("errorRevision", "El pedido no existe."));
+    }
 }
